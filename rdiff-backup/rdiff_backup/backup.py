@@ -709,6 +709,8 @@ class IncrementITRB(PatchITRB):
 				elif mirror_rp.lstat():
 					mirror_rp.delete()
 					self.CCPP.flag_deleted(index)
+				elif inc.renamed:
+					self.CCPP.flag_deleted(index)
 				return # normal return, otherwise error occurred
 		tf.setdata()
 		if tf.lstat(): tf.delete()

@@ -41,7 +41,7 @@ def Increment(new, mirror, incpref):
 	elif mirror.isdir(): incrp = makedir(mirror, incpref)
 	elif new.isreg() and mirror.isreg():
 		incrp = makediff(new, mirror, incpref)
-	else: incrp = makesnapshot(mirror, incpref)
+	else: incrp = makesnapshot(mirror, incpref, not new.lstat())
 	statistics.process_increment(incrp)
 	return incrp
 
@@ -56,14 +56,18 @@ def iscompressed(mirror):
 	return (Globals.compression and
 			not Globals.no_compression_regexp.match(mirror.path))
 
-def makesnapshot(mirror, incpref):
+def makesnapshot(mirror, incpref, renameok):
 	"""Copy mirror to incfile, since new is quite different"""
 	compress = iscompressed(mirror)
 	if compress and mirror.isreg():
+		renameok = False;
 		snapshotrp = get_inc(incpref, "snapshot.gz")
 	else: snapshotrp = get_inc(incpref, "snapshot")
 
-	if mirror.isspecial(): # check for errors when creating special increments
+	if renameok:
+		rpath.rename(mirror, snapshotrp)
+		snapshotrp.renamed = True;
+	elif mirror.isspecial(): # check for errors when creating special increments
 		eh = robust.get_error_handler("SpecialFileError")
 		if robust.check_common_error(eh, rpath.copy_with_attribs,
 									 (mirror, snapshotrp, compress)) == 0:
